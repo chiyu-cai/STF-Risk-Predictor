@@ -23,10 +23,10 @@ with tab2:
     st.subheader("Methodological Framework for Image Super-Resolution and STF Quantification")
     try:
         # Image gets full width to show all high-res details
-        image = Image.open('Figure.tif')
+        image = Image.open('Figure.png')
         st.image(image, use_column_width=True)
     except Exception as e:
-        st.warning("⚠️ Place 'Figure.tif' in the same folder to view the flowchart here.")
+        st.warning("⚠️ Place 'Figure.png' in the same folder to view the flowchart here.")
 
 # ----------------- TAB 1: Main Prediction UI -----------------
 with tab1:
