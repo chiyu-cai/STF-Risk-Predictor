@@ -33,8 +33,8 @@ with tab1:
     # --- Load Pre-trained Models ---
     @st.cache(allow_output_mutation=True)
     def load_models():
-        rf = joblib.load('rf_model.pkl')       # Stage 1: Radiomics Model
-        lr = joblib.load('combined_model.pkl') # Stage 2: Clinical Combined Model
+        rf = joblib.load('STF-Deploy/rf_model.pkl')       # Stage 1: Radiomics Model
+        lr = joblib.load('STF-Deploy/combined_model.pkl') # Stage 2: Clinical Combined Model
         return rf, lr
 
     try:
