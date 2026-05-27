@@ -22,8 +22,9 @@ tab1, tab2 = st.tabs(["🚀 Prediction Tool", "📖 Methodological Framework"])
 with tab2:
     st.subheader("Methodological Framework for Image Super-Resolution and STF Quantification")
     try:
-        # Image gets full width to show all high-res details
-        image = Image.open('Figure.png')
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.join(current_dir, 'Figure.png')
+        image = Image.open(image_path)
         st.image(image, use_column_width=True)
     except Exception as e:
         st.warning("⚠️ Place 'Figure.png' in the same folder to view the flowchart here.")
