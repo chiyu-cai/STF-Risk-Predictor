@@ -21,22 +21,30 @@ tab1, tab2 = st.tabs(["🚀 Prediction Tool", "📖 Methodological Framework"])
 # ----------------- TAB 2: Full Screen Image -----------------
 with tab2:
     st.subheader("Methodological Framework for Image Super-Resolution and STF Quantification")
+    
+    # 获取服务器当前的运行目录和 app.py 所在的目录
     current_cwd = os.getcwd() # 通常是 GitHub 仓库根目录 /mount/src/stf-risk-predictor/
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+    script_dir = os.path.dirname(os.path.abspath(__file__)) # 通常是 /mount/src/stf-risk-predictor/STF-Deploy/
+    
+    # === 【雷达探测区】如果你想看清云端到底长啥样，可以取消下面两行的注释 ===
+    # st.info(f"🔍 调试信息 - 当前工作目录: {current_cwd}")
+    # st.info(f"🔍 调试信息 - 代码所在目录包含了这些文件: {os.listdir(script_dir)}")
+    
     try:
+        # 猜测一：图片和 app.py 在同一个文件夹里 (STF-Deploy/Figure.png)
         path_a = os.path.join(script_dir, 'Figure.png')
         if os.path.exists(path_a):
             st.image(path_a, use_column_width=True)
         else:
-     # 猜测二：图片在 GitHub 仓库的最外面一层根目录 (Figure.png)
-        path_b = os.path.join(current_cwd, 'Figure.png')
-        if os.path.exists(path_b):
-            st.image(path_b, use_column_width=True)
-        else:
-     # 都不在，抛出具体的缺失信息
-            st.error("⚠️ 找不到 Figure.png。我已经找了以下两个地方：")
-            st.code(f"1. {path_a}\n2. {path_b}")
-            st.warning("👉 请检查 GitHub 仓库：\n1. 图片是否已经成功 Push 上去了？\n2. 名字是否确切为大写的 'Figure.png'？")
+            # 猜测二：图片在 GitHub 仓库的最外面一层根目录 (Figure.png)
+            path_b = os.path.join(current_cwd, 'Figure.png')
+            if os.path.exists(path_b):
+                st.image(path_b, use_column_width=True)
+            else:
+                # 都不在，抛出具体的缺失信息
+                st.error("⚠️ 找不到 Figure.png。我已经找了以下两个地方：")
+                st.code(f"1. {path_a}\n2. {path_b}")
+                st.warning("👉 请检查 GitHub 仓库：\n1. 图片是否已经成功 Push 上去了？\n2. 名字是否确切为大写的 'Figure.png'？")
     except Exception as e:
         st.warning("⚠️ Place 'Figure.png' in the same folder to view the flowchart here.")
 
