@@ -26,7 +26,7 @@ with tab2:
         image = Image.open('Figure.tif')
         st.image(image, use_column_width=True)
     except Exception as e:
-        st.warning("⚠️ Place 'Figure 1_0511.tif' in the same folder to view the flowchart here.")
+        st.warning("⚠️ Place 'Figure.tif' in the same folder to view the flowchart here.")
 
 # ----------------- TAB 1: Main Prediction UI -----------------
 with tab1:
