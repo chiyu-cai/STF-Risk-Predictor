@@ -1,9 +1,8 @@
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 
 import joblib
 import numpy as np
-import pandas as pd
 import streamlit as st
 
 
@@ -11,7 +10,7 @@ import streamlit as st
 # 1. Page configuration
 # ============================================================
 st.set_page_config(
-    page_title="Low STF Predictor",
+    page_title="Low STF Radiomics Predictor",
     page_icon="🩺",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -20,7 +19,6 @@ st.set_page_config(
 
 # ============================================================
 # 2. Visual system
-#    UI-only styling: model inputs and prediction logic are unchanged.
 # ============================================================
 st.markdown(
     """
@@ -37,7 +35,6 @@ st.markdown(
             --stf-teal-dark: #087477;
             --stf-soft-blue: #eef5ff;
             --stf-soft-teal: #eaf8f7;
-            --stf-warning: #b25f16;
         }
 
         .stApp {
@@ -46,9 +43,8 @@ st.markdown(
         }
 
         .block-container {
-            max-width: 1504px;
-            padding: 1.6rem 2.5rem 3rem;
-            padding-bottom: 3rem;
+            max-width: 1180px;
+            padding: 1.8rem 2.5rem 3rem;
         }
 
         header[data-testid="stHeader"] {
@@ -57,17 +53,13 @@ st.markdown(
             background: transparent;
         }
 
-        div[data-testid="stDecoration"] {
-            display: none;
-        }
-
+        div[data-testid="stDecoration"],
         div[data-testid="stToolbar"],
         div[data-testid="stStatusWidget"],
         #MainMenu {
             display: none;
         }
 
-        /* Quiet application header */
         .stf-header {
             margin: 0 0 1rem 0;
         }
@@ -82,14 +74,13 @@ st.markdown(
         }
 
         .stf-header p {
-            max-width: 780px;
+            max-width: 820px;
             margin: 0.65rem 0 0;
             color: var(--stf-muted);
             font-size: 1.02rem;
             line-height: 1.65;
         }
 
-        /* Tabs */
         div[data-baseweb="tab-list"] {
             gap: 2rem;
             border-bottom: 1px solid var(--stf-border);
@@ -116,10 +107,9 @@ st.markdown(
             background-color: var(--stf-blue) !important;
         }
 
-        /* Form surface */
         div[data-testid="stForm"] {
             margin-top: 1rem;
-            padding: 1.2rem 1.4rem 1.1rem;
+            padding: 1.35rem 1.5rem 1.2rem;
             border: 1px solid var(--stf-border);
             border-radius: 16px;
             background: var(--stf-surface);
@@ -130,7 +120,7 @@ st.markdown(
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            margin: 0.1rem 0 0.75rem;
+            margin: 0.1rem 0 0.8rem;
         }
 
         .stf-section-icon {
@@ -173,18 +163,14 @@ st.markdown(
             line-height: 1.45;
         }
 
-        /* Form labels and controls */
-        div[data-testid="stNumberInput"] label,
-        div[data-testid="stSelectbox"] label {
+        div[data-testid="stNumberInput"] label {
             color: var(--stf-text);
             font-size: 0.84rem;
             font-weight: 620;
         }
 
         div[data-baseweb="input"] > div,
-        div[data-baseweb="select"] > div,
-        div[data-testid="stNumberInputContainer"],
-        div[data-testid="stSelectbox"] .react-aria-ComboBox > div[role="group"] {
+        div[data-testid="stNumberInputContainer"] {
             min-height: 44px;
             border-color: #cbd6e5;
             border-radius: 10px;
@@ -193,23 +179,19 @@ st.markdown(
         }
 
         div[data-baseweb="input"] > div:focus-within,
-        div[data-baseweb="select"] > div:focus-within,
-        div[data-testid="stNumberInputContainer"]:focus-within,
-        div[data-testid="stSelectbox"] .react-aria-ComboBox > div[role="group"]:focus-within {
+        div[data-testid="stNumberInputContainer"]:focus-within {
             border-color: var(--stf-blue);
             box-shadow: 0 0 0 3px rgba(37, 116, 232, 0.11);
         }
 
-        div[data-baseweb="input"] input,
-        div[data-baseweb="select"] * {
+        div[data-baseweb="input"] input {
             color: var(--stf-text);
             font-size: 0.94rem;
         }
 
-        /* Primary action */
         div[data-testid="stFormSubmitButton"] {
-            max-width: 660px;
-            margin: 0.8rem auto 0;
+            max-width: 560px;
+            margin: 1rem auto 0;
         }
 
         div[data-testid="stFormSubmitButton"] button {
@@ -221,7 +203,6 @@ st.markdown(
             color: #ffffff !important;
             font-size: 0.97rem;
             font-weight: 700;
-            letter-spacing: 0.005em;
             box-shadow: 0 8px 18px rgba(10, 143, 145, 0.18);
             transition: transform 150ms ease, background 150ms ease,
                         box-shadow 150ms ease;
@@ -230,25 +211,22 @@ st.markdown(
         div[data-testid="stFormSubmitButton"] button:hover {
             border-color: var(--stf-teal-dark);
             background: var(--stf-teal-dark) !important;
-            color: #ffffff !important;
             transform: translateY(-1px);
             box-shadow: 0 10px 22px rgba(10, 143, 145, 0.24);
         }
 
-        div[data-testid="stFormSubmitButton"] button:focus {
-            background: var(--stf-teal) !important;
-            color: #ffffff !important;
-            box-shadow: 0 0 0 4px rgba(10, 143, 145, 0.16);
-        }
-
-        /* Results */
         .stf-results-heading {
             margin-top: 1.25rem;
         }
 
+        .stf-result-wrap {
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
         div[data-testid="stMetric"] {
-            min-height: 110px;
-            padding: 1rem 1.15rem;
+            min-height: 120px;
+            padding: 1.05rem 1.2rem;
             border: 1px solid var(--stf-border);
             border-radius: 14px;
             background: var(--stf-surface);
@@ -263,7 +241,7 @@ st.markdown(
 
         div[data-testid="stMetricValue"] {
             color: var(--stf-teal);
-            font-size: 2.15rem;
+            font-size: 2.2rem;
             font-weight: 760;
             letter-spacing: -0.025em;
         }
@@ -296,7 +274,6 @@ st.markdown(
             stroke: var(--stf-blue);
         }
 
-        /* Methodology */
         .stf-flow {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -365,20 +342,13 @@ st.markdown(
 
 
 # ============================================================
-# 3. Reusable code-native SVG icons and headings
+# 3. Reusable SVG icons and headings
 # ============================================================
 ICONS = {
     "waveform": """
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M3 12h3l2.1-6.5 3.6 13L14 9l1.7 3H21" />
-        </svg>
-    """,
-    "patient": """
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="7" r="3.2" />
-            <path d="M5 20c.5-4 3-6.2 7-6.2s6.5 2.2 7 6.2" />
         </svg>
     """,
     "target": """
@@ -415,7 +385,6 @@ def section_heading(
     teal: bool = False,
     results: bool = False,
 ) -> None:
-    """Render a consistent section heading with an inline SVG icon."""
     color_class = " teal" if teal else ""
     results_class = " stf-results-heading" if results else ""
     icon_svg = "".join(line.strip() for line in ICONS[icon].splitlines())
@@ -435,8 +404,8 @@ def section_heading(
 SCRIPT_DIR = Path(__file__).resolve().parent
 
 
-def find_model_paths() -> Tuple[Path, Path]:
-    """Find the existing model files without changing their expected names."""
+def find_model_path() -> Path:
+    """Find the radiomics-only random-forest model."""
     candidate_directories = (
         SCRIPT_DIR / "STF-Deploy",
         SCRIPT_DIR,
@@ -446,39 +415,33 @@ def find_model_paths() -> Tuple[Path, Path]:
 
     for directory in candidate_directories:
         rf_path = directory / "rf_model.pkl"
-        lr_path = directory / "combined_model.pkl"
-        if rf_path.is_file() and lr_path.is_file():
-            return rf_path, lr_path
+        if rf_path.is_file():
+            return rf_path
 
-    expected = SCRIPT_DIR / "STF-Deploy"
+    expected = SCRIPT_DIR / "STF-Deploy" / "rf_model.pkl"
     raise FileNotFoundError(
-        "Could not find rf_model.pkl and combined_model.pkl together. "
-        f"Place both files in: {expected}"
+        f"Could not find rf_model.pkl. Expected location: {expected}"
     )
 
 
 if hasattr(st, "cache_resource"):
-    cache_models = st.cache_resource(show_spinner=False)
+    cache_model = st.cache_resource(show_spinner=False)
 else:
-    # Compatibility with older Streamlit releases.
-    cache_models = st.cache(allow_output_mutation=True, show_spinner=False)
+    cache_model = st.cache(allow_output_mutation=True, show_spinner=False)
 
 
-@cache_models
-def load_models(rf_path: str, lr_path: str):
-    """Load the original two-stage prediction models once per app session."""
-    rf_model = joblib.load(rf_path)
-    lr_model = joblib.load(lr_path)
-    return rf_model, lr_model
+@cache_model
+def load_model(rf_path: str):
+    """Load the radiomics model once per app session."""
+    return joblib.load(rf_path)
 
 
 try:
-    rf_model_path, lr_model_path = find_model_paths()
-    rf_model, lr_model = load_models(str(rf_model_path), str(lr_model_path))
+    rf_model_path = find_model_path()
+    rf_model = load_model(str(rf_model_path))
     model_error = None
 except Exception as exc:
     rf_model = None
-    lr_model = None
     model_error = str(exc)
 
 
@@ -495,10 +458,10 @@ def find_figure() -> Optional[Path]:
 st.markdown(
     """
     <header class="stf-header">
-        <h1>Multimodal Prediction System for Low STF</h1>
+        <h1>Radiomics-based Prediction System for Low STF</h1>
         <p>
-            Radiomics and clinical signatures combined in a two-stage
-            prediction workflow.
+            A proof-of-concept tool for individualized estimation of low-STF
+            probability using eight quantitative CT radiomics features.
         </p>
     </header>
     """,
@@ -514,87 +477,60 @@ prediction_tab, methodology_tab = st.tabs(["Prediction", "Methodology"])
 with prediction_tab:
     if model_error:
         st.error(
-            "The prediction models could not be loaded. "
-            f"Check the model files and paths. Details: {model_error}"
+            "The radiomics model could not be loaded. "
+            f"Check rf_model.pkl and its path. Details: {model_error}"
         )
 
     with st.form("low_stf_prediction_form"):
-        radiomics_panel, clinical_panel = st.columns([2, 1], gap="large")
+        section_heading(
+            "Radiomics features",
+            "Enter the eight radiomics features used by the trained random-forest model.",
+            "waveform",
+        )
 
-        with radiomics_panel:
-            section_heading(
-                "Radiomics features",
-                "",
-                "waveform",
+        radiomics_col_1, radiomics_col_2 = st.columns(2, gap="large")
+
+        with radiomics_col_1:
+            feat_1 = st.number_input(
+                "exp_ngtdm_Busyness", value=0.0, format="%.6f"
+            )
+            feat_2 = st.number_input(
+                "log_glcm_ClusterShade", value=0.0, format="%.6f"
+            )
+            feat_3 = st.number_input(
+                "log_glcm_DifferenceAverage", value=0.0, format="%.6f"
+            )
+            feat_4 = st.number_input(
+                "square_glcm_Imc1", value=0.0, format="%.6f"
             )
 
-            radiomics_col_1, radiomics_col_2 = st.columns(2, gap="medium")
-
-            with radiomics_col_1:
-                feat_1 = st.number_input(
-                    "exp_ngtdm_Busyness", value=0.0, format="%.6f"
-                )
-                feat_2 = st.number_input(
-                    "log_glcm_ClusterShade", value=0.0, format="%.6f"
-                )
-                feat_3 = st.number_input(
-                    "log_glcm_DifferenceAverage", value=0.0, format="%.6f"
-                )
-                feat_4 = st.number_input(
-                    "square_glcm_Imc1", value=0.0, format="%.6f"
-                )
-
-            with radiomics_col_2:
-                feat_5 = st.number_input(
-                    "sqrt_firstorder_Skewness", value=0.0, format="%.6f"
-                )
-                feat_6 = st.number_input(
-                    "sqrt_glrlm_ShortRunLowGrayLevel",
-                    value=0.0,
-                    format="%.6f",
-                )
-                feat_7 = st.number_input(
-                    "wavelet_LHL_firstorder_Skewness",
-                    value=0.0,
-                    format="%.6f",
-                )
-                feat_8 = st.number_input(
-                    "wavelet_LLL_ngtdm_Strength", value=0.0, format="%.6f"
-                )
-
-        with clinical_panel:
-            section_heading(
-                "Clinical signatures",
-                "",
-                "patient",
-                teal=True,
+        with radiomics_col_2:
+            feat_5 = st.number_input(
+                "sqrt_firstorder_Skewness", value=0.0, format="%.6f"
             )
-
-            sex_input = st.selectbox("Sex", options=["Male", "Female"])
-            bmi_input = st.selectbox(
-                "Body Mass Index (BMI)", options=["≤ 25 kg/m²", "> 25 kg/m²"]
+            feat_6 = st.number_input(
+                "sqrt_glrlm_ShortRunLowGrayLevel",
+                value=0.0,
+                format="%.6f",
             )
-            nlr_input = st.selectbox("NLR", options=["≤ 3.0", "> 3.0"])
-            age_input = st.selectbox(
-                "Age", options=["≤ 65 years", "> 65 years"]
+            feat_7 = st.number_input(
+                "wavelet_LHL_firstorder_Skewness",
+                value=0.0,
+                format="%.6f",
+            )
+            feat_8 = st.number_input(
+                "wavelet_LLL_ngtdm_Strength", value=0.0, format="%.6f"
             )
 
         run_prediction = st.form_submit_button(
-            "Run Low STF Prediction", use_container_width=True
+            "Estimate Low STF Probability", use_container_width=True
         )
 
-    # The following preprocessing and two-stage prediction logic matches
-    # the original application. Only the visible terminology has changed.
     if run_prediction:
-        if rf_model is None or lr_model is None:
-            st.error("Prediction is unavailable until both model files are loaded.")
+        if rf_model is None:
+            st.error("Prediction is unavailable until rf_model.pkl is loaded.")
         else:
-            with st.spinner("Processing multimodal data..."):
-                sex_val = 1 if sex_input == "Male" else 2
-                bmi_val = 0 if bmi_input == "≤ 25 kg/m²" else 1
-                nlr_val = 0 if nlr_input == "≤ 3.0" else 1
-                age_val = 0 if age_input == "≤ 65 years" else 1
-
+            with st.spinner("Processing radiomics features..."):
                 radiomics_data = np.array(
                     [[
                         feat_1,
@@ -607,65 +543,47 @@ with prediction_tab:
                         feat_8,
                     ]]
                 )
-                rad_score_prob = rf_model.predict_proba(radiomics_data)[0][1]
 
-                lr_input_df = pd.DataFrame(
-                    {
-                        "Sex": [sex_val],
-                        "BMI": [bmi_val],
-                        "NLR": [nlr_val],
-                        "Age": [age_val],
-                        "Radscore": [rad_score_prob],
-                    }
-                )
-                final_prob = lr_model.predict_proba(lr_input_df)[0][1] * 100
+                # The original app treated class 1 as low-STF status.
+                # Keep this behavior unless the model's class definition differs.
+                low_stf_prob = float(rf_model.predict_proba(radiomics_data)[0][1])
 
                 st.session_state["low_stf_prediction"] = {
-                    "radiomics_probability": float(rad_score_prob * 100),
-                    "final_probability": float(final_prob),
+                    "probability": low_stf_prob * 100
                 }
 
     result = st.session_state.get("low_stf_prediction")
     if result is not None:
-        rad_probability = result["radiomics_probability"]
-        low_stf_probability = result["final_probability"]
+        low_stf_probability = result["probability"]
 
         section_heading(
-            "Prediction results",
+            "Prediction result",
             "",
             "target",
+            teal=True,
             results=True,
         )
 
-        result_col_1, result_col_2 = st.columns(2, gap="medium")
-        with result_col_1:
-            st.metric(
-                label="Radiomics probability",
-                value=f"{rad_probability:.2f}%",
-            )
-            st.caption(
-                "Derived from the eight non-linear quantitative imaging features."
-            )
-
-        with result_col_2:
-            st.metric(
-                label="Final Low STF probability",
-                value=f"{low_stf_probability:.2f}%",
-            )
-            st.caption(
-                "Combined estimate based on radiomics and clinical signatures."
-            )
-
+        st.markdown('<div class="stf-result-wrap">', unsafe_allow_html=True)
+        st.metric(
+            label="Estimated probability of low STF",
+            value=f"{low_stf_probability:.2f}%",
+        )
+        st.caption(
+            "Probability generated directly by the radiomics-only random-forest model."
+        )
         st.progress(int(round(low_stf_probability)))
 
+        # A 50% threshold is retained from the previous interface.
+        # Replace this with the prespecified model cutoff if your manuscript uses another value.
         if low_stf_probability > 50:
             st.warning(
-                "High probability of Low STF detected "
+                "The model classifies this case as higher probability of low STF "
                 f"({low_stf_probability:.2f}%)."
             )
         else:
             st.success(
-                "Low probability of Low STF "
+                "The model classifies this case as lower probability of low STF "
                 f"({low_stf_probability:.2f}%)."
             )
 
@@ -677,6 +595,7 @@ with prediction_tab:
             '</div>',
             unsafe_allow_html=True,
         )
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
 # ============================================================
@@ -685,7 +604,7 @@ with prediction_tab:
 with methodology_tab:
     section_heading(
         "Methodological framework",
-        "Image processing, radiomics quantification, and clinical integration",
+        "Routine CT radiomics extraction and radiomics-only low-STF prediction",
         "method",
     )
 
@@ -693,16 +612,16 @@ with methodology_tab:
         """
         <div class="stf-flow">
             <div class="stf-flow-step">
-                <strong>Stage I · Imaging</strong>
-                <span>Image super-resolution and radiomics feature extraction</span>
+                <strong>Stage I · Radiomics</strong>
+                <span>Quantitative features extracted from predefined thymic CT slices</span>
             </div>
             <div class="stf-flow-step">
-                <strong>Stage II · Integration</strong>
-                <span>Radiomics probability combined with clinical signatures</span>
+                <strong>Stage II · Prediction</strong>
+                <span>Eight selected features entered into the trained random-forest model</span>
             </div>
             <div class="stf-flow-step">
                 <strong>Output · Low STF</strong>
-                <span>Final probability generated by the combined model</span>
+                <span>Individualized probability of low-STF status</span>
             </div>
         </div>
         """,
@@ -712,20 +631,19 @@ with methodology_tab:
     figure_path = find_figure()
     if figure_path is None:
         st.info(
-            "Add Figure.png beside this script to display the complete "
-            "methodological framework."
+            "Optional: add an updated radiomics-only Figure.png beside this script "
+            "to display the methodological framework."
         )
     else:
         try:
             st.image(
                 str(figure_path),
-                caption="Methodological framework for Low STF prediction",
+                caption="Radiomics-based framework for low-STF prediction",
                 use_container_width=True,
             )
         except TypeError:
-            # Compatibility with older Streamlit releases.
             st.image(
                 str(figure_path),
-                caption="Methodological framework for Low STF prediction",
+                caption="Radiomics-based framework for low-STF prediction",
                 use_column_width=True,
             )
